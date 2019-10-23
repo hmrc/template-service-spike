@@ -23,7 +23,9 @@ const getDependency = async (name, remote, latest) => {
   const version = await lookupLocalVersion()
 
   if (version !== latest) {
-    await spawnPromise('./getDependencies.sh', [name, remote, latest])
+    let scriptFile = path.join(__dirname, '..', 'getDependencies.sh')
+    console.log(scriptFile, ' "' + ([name, remote, latest].join('", "')) + '"')
+    await spawnPromise(scriptFile, [name, remote, latest])
   }
 }
 
