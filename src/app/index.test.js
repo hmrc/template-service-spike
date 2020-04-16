@@ -193,19 +193,23 @@ describe("Templates as a service... again!", () => {
           return request(app)
               .post("/govuk/3.5.0/templates/default")
               .send({
+                variables: {
                   "htmlClasses": "app-html-class",
                   "htmlLang": "en",
                   "themeColor": "blue",
                   "bodyClasses": "app-body-class",
+                  "mainClasses": "app-main-class"
+                },
+                blocks: {
                   "pageTitle": "GOV.UK - Customised page template",
                   "head": "\n  <link href=\"custom-stylesheet.css\" rel=\"stylesheet\">\n",
-                  "mainClasses": "app-main-class",
                   "beforeContent": "<p>Customised before content, <a class=\"govuk-link\" href=\"#\">this is a link</a>.",
                   "header": "<header role=\"banner\">Custom header</header>",
                   "skipLink": "<a href=\"#main-content\" class=\"govuk-skip-link\">Custom skip link</a>",
                   "content": "<h1 class=\"govuk-heading-xl\">Customised page template</h1>",
                   "footer": "<footer role=\"contentinfo\">Custom footer</footer>",
                   "bodyEnd": "<script src=\"custom-script.js\"></script>"
+                }
               })
               .expect(200)
               .then(response => {

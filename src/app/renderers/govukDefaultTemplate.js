@@ -7,46 +7,22 @@ const jsonParser = bodyParser.json()
 const orgs = require('../constants').orgs
 
 const {
-  getNpmDependency,
   renderNunjucks
 } = require('../util')
 
-const addSetters = (params) => [
-  'htmlClasses',
-  'htmlLang',
-  'pageTitleLang',
-  'mainLang',
-  'assetPath',
-  'assetUrl',
-  'themeColor',
-  'bodyClasses',
-  'mainClasses',
-  'containerClasses'
-].map(key => params[key] !== undefined ? `{% set ${key} = "${params[key]}" %}` : '').join('')
-
-const addBlocks = (params) => [
-  'pageTitle',
-  'headIcons',
-  'head',
-  'bodyStart',
-  'skipLink',
-  'header',
-  'main',
-  'beforeContent',
-  'content',
-  'footer',
-  'bodyEnd'
-].map(key => params[key] !== undefined ? `{% block ${key} %}${params[key]}{% endblock %}` : '').join('')
+function convertToNunjucks(variables, callback) {
+  return Object.keys(variables).map(key => variables[key] !== undefined ? callback(key, variables[key]) : '').join('');
+}
 
 const govukTemplateNunjucks = (params) => `
 {% extends 'govuk/template.njk' %}
-${addSetters(params)}
-${addBlocks(params)}`
-
-
+${params.variables ? convertToNunjucks(params.variables, (key, value) => `{% set ${key} = "${value}" %}`) : ''}
+${params.blocks ? convertToNunjucks(params.blocks, (key, value) => `{% block ${key} %}${value}{% endblock %}`) : ''}`
 
 router.post('/:version/templates/default', jsonParser, async (req, res) => {
   const nunjucksString = govukTemplateNunjucks(req.body)
+
+  console.log(nunjucksString)
 
   await renderNunjucks(req.params.version, orgs.govuk, res, nunjucksString)
 })

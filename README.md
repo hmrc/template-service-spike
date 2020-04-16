@@ -52,7 +52,21 @@ Posting to `/hmrc/1.4.0/components/hmrcPageHeading` with a body of `{"text": "Pa
 
 The request body should contain JSON (therefore a `content-type: application/json` on the request) containing the parameters for the component.  For example:
 
-Posting to `/govuk/3.6.0/templates/default` with a body of `{"htmlLang": "abc", "htmlClasses": "def", "beforeContent": "abcdefghijklmnop"}` would return the HTML:
+Posting to `/govuk/3.6.0/templates/default` with a body of:
+
+```
+{
+  "variables": {
+    "htmlLang": "abc",
+    "htmlClasses": "def",
+    "assetPath": "/ghi/jkl"
+  },
+  "blocks": {
+    "beforeContent": "abcdefghijklmnop"
+  }
+}
+```
+ would return the HTML:
 
 ```
 <!DOCTYPE html>
