@@ -145,7 +145,7 @@ describe("Templates as a service... again!", () => {
       </body>
     </html>`
           return request(app)
-              .post("/govuk/3.5.0/components/govukTemplate")
+              .post("/govuk/3.5.0/templates/default")
               .send({})
               .expect(200)
               .then(response => {
@@ -191,7 +191,7 @@ describe("Templates as a service... again!", () => {
 </html>
 `
           return request(app)
-              .post("/govuk/3.5.0/components/govukTemplate")
+              .post("/govuk/3.5.0/templates/default")
               .send({
                   "htmlClasses": "app-html-class",
                   "htmlLang": "en",

@@ -11,52 +11,39 @@ const {
   renderNunjucks
 } = require('../util')
 
-const govukTemplateNunjucks = ({
-                                 htmlClasses,
-                                 htmlLang,
-                                 pageTitleLang,
-                                 mainLang,
-                                 assetPath,
-                                 assetUrl,
-                                 themeColor,
-                                 bodyClasses,
-                                 containerClasses,
-                                 pageTitle,
-                                 headIcons,
-                                 head,
-                                 bodyStart,
-                                 skipLink,
-                                 header,
-                                 mainClasses,
-                                 main,
-                                 beforeContent,
-                                 content,
-                                 footer,
-                                 bodyEnd
-                               }) => `
+const addSetters = (params) => [
+  'htmlClasses',
+  'htmlLang',
+  'pageTitleLang',
+  'mainLang',
+  'assetPath',
+  'assetUrl',
+  'themeColor',
+  'bodyClasses',
+  'mainClasses',
+  'containerClasses'
+].map(key => params[key] !== undefined ? `{% set ${key} = "${params[key]}" %}` : '').join('')
+
+const addBlocks = (params) => [
+  'pageTitle',
+  'headIcons',
+  'head',
+  'bodyStart',
+  'skipLink',
+  'header',
+  'main',
+  'beforeContent',
+  'content',
+  'footer',
+  'bodyEnd'
+].map(key => params[key] !== undefined ? `{% block ${key} %}${params[key]}{% endblock %}` : '').join('')
+
+const govukTemplateNunjucks = (params) => `
 {% extends 'govuk/template.njk' %}
-${htmlClasses !== undefined ? `{% set htmlClasses = "${htmlClasses}" %}` : ''}
-${htmlLang !== undefined ? `{% set htmlLang = "${htmlLang}" %}` : ''}
-${pageTitleLang !== undefined ? `{% set pageTitleLang = "${pageTitleLang}" %}` : ''}
-${mainLang !== undefined ? `{% set mainLang = "${mainLang}" %}` : ''}
-${assetPath !== undefined ? `{% set assetPath = "${assetPath}" %}` : ''}
-${assetUrl !== undefined ? `{% set assetUrl = "${assetUrl}" %}` : ''}
-${themeColor !== undefined ? `{% set themeColor = "${themeColor}" %}` : ''}
-${bodyClasses !== undefined ? `{% set bodyClasses = "${bodyClasses}" %}` : ''}
-${containerClasses !== undefined ? `{% set containerClasses = "${containerClasses}" %}` : ''}
-${pageTitle !== undefined ? `{% block pageTitle %}${pageTitle}{% endblock %}` : ''}
-${headIcons !== undefined ? `{% block headIcons %}${headIcons}{% endblock %}` : ''}
-${head !== undefined ? `{% block head %}${head}{% endblock %}` : ''}
-${bodyStart !== undefined ? `{% block bodyStart %}${bodyStart}{% endblock %}` : ''}
-${skipLink !== undefined ? `{% block skipLink %}${skipLink}{% endblock %}` : ''}
-${header !== undefined ? `{% block header %}${header}{% endblock %}` : ''}
-${mainClasses !== undefined ? `{% set mainClasses = "${mainClasses}" %}` : ''}
-${main !== undefined ? `{% block main %}${main}{% endblock %}` : ''}
-${beforeContent !== undefined ? `{% block beforeContent %}${beforeContent}{% endblock %}` : ''}
-${content !== undefined ? `{% block content %}${content}{% endblock %}` : ''}
-${footer !== undefined ? `{% block footer %}${footer}{% endblock %}` : ''}
-${bodyEnd !== undefined ? `{% block bodyEnd %}${bodyEnd}{% endblock %}` : ''}
-`
+${addSetters(params)}
+${addBlocks(params)}`
+
+
 
 router.post('/:version/templates/default', jsonParser, async (req, res) => {
   const {
