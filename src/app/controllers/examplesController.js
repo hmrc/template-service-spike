@@ -1,3 +1,6 @@
+const express = require('express')
+const router = express.Router()
+
 const {
   getComponentIdentifier,
   getDataFromFile,
@@ -28,9 +31,9 @@ const orgs = {
   }
 }
 
-module.exports = async (req, res) => {
-  const { params: { component, org } } = req
-  const { componentRootPath, dependencies, name, rootPath } = orgs[org]
+router.get('/:org/:component', async (req, res) => {
+  const {params: {component, org}} = req
+  const {componentRootPath, dependencies, name, rootPath} = orgs[org]
 
   const componentIdentifier = getComponentIdentifier(component)
   const componentPath = `${componentRootPath}/${substitutionMap[componentIdentifier] || componentIdentifier}`
@@ -59,11 +62,13 @@ module.exports = async (req, res) => {
         name: `${componentIdentifier}/${example}`
       }))
     })
-      
-   Promise.all(output).then(result => {
-     res.send(result)
-   })
+
+    Promise.all(output).then(result => {
+      res.send(result)
+    })
   } catch (err) {
     res.status(500).send(err)
   }
-}
+})
+
+module.exports = router

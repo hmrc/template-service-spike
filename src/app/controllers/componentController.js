@@ -1,105 +1,35 @@
-const nunjucks = require('../../lib/nunjucks')
+const express = require('express')
+const bodyParser = require('body-parser')
+
+const jsonParser = bodyParser.json()
+
+const orgs = require('../../constants').orgs
 
 const {
-    govukFrontendRoot,
-    hmrcFrontendRoot
-} = require('../../constants')
-
-const {
-    getComponentIdentifier,
-    getNpmDependency
+  getComponentIdentifier,
+  renderNunjucks
 } = require('../../util')
 
-const orgs = {
-    'govuk': {
-        label: 'govuk-frontend',
-        minimumSupported: 3,
-        paths: [
-            `${govukFrontendRoot}/govuk/components`,
-        ]
-    },
-    'hmrc': {
-        label: 'hmrc-frontend',
-        minimumSupported: 1,
-        paths: [
-            `${hmrcFrontendRoot}/hmrc/components`
-        ]
-    }
-}
+const createRouterForOrg = (orgString) => {
+  const router = express.Router()
 
-const govukTemplateNunjucks = ({
-                      htmlClasses,
-                      htmlLang,
-                      pageTitleLang,
-                      mainLang,
-                      assetPath,
-                      assetUrl,
-                      themeColor,
-                      bodyClasses,
-                      containerClasses,
-                      pageTitle,
-                      headIcons,
-                      head,
-                      bodyStart,
-                      skipLink,
-                      header,
-                      mainClasses,
-                      main,
-                      beforeContent,
-                      content,
-                      footer,
-                      bodyEnd
-                  }) => `
-{% extends 'govuk/template.njk' %}
-${htmlClasses !== undefined ? `{% set htmlClasses = "${htmlClasses}" %}` : ''}
-${htmlLang !== undefined ? `{% set htmlLang = "${htmlLang}" %}` : ''}
-${pageTitleLang !== undefined ? `{% set pageTitleLang = "${pageTitleLang}" %}` : ''}
-${mainLang !== undefined ? `{% set mainLang = "${mainLang}" %}` : ''}
-${assetPath !== undefined ? `{% set assetPath = "${assetPath}" %}` : ''}
-${assetUrl !== undefined ? `{% set assetUrl = "${assetUrl}" %}` : ''}
-${themeColor !== undefined ? `{% set themeColor = "${themeColor}" %}` : ''}
-${bodyClasses !== undefined ? `{% set bodyClasses = "${bodyClasses}" %}` : ''}
-${containerClasses !== undefined ? `{% set containerClasses = "${containerClasses}" %}` : ''}
-${pageTitle !== undefined ? `{% block pageTitle %}${pageTitle}{% endblock %}` : ''}
-${headIcons !== undefined ? `{% block headIcons %}${headIcons}{% endblock %}` : ''}
-${head !== undefined ? `{% block head %}${head}{% endblock %}` : ''}
-${bodyStart !== undefined ? `{% block bodyStart %}${bodyStart}{% endblock %}` : ''}
-${skipLink !== undefined ? `{% block skipLink %}${skipLink}{% endblock %}` : ''}
-${header !== undefined ? `{% block header %}${header}{% endblock %}` : ''}
-${mainClasses !== undefined ? `{% set mainClasses = "${mainClasses}" %}` : ''}
-${main !== undefined ? `{% block main %}${main}{% endblock %}` : ''}
-${beforeContent !== undefined ? `{% block beforeContent %}${beforeContent}{% endblock %}` : ''}
-${content !== undefined ? `{% block content %}${content}{% endblock %}` : ''}
-${footer !== undefined ? `{% block footer %}${footer}{% endblock %}` : ''}
-${bodyEnd !== undefined ? `{% block bodyEnd %}${bodyEnd}{% endblock %}` : ''}
-`
+  router.post('/:version/components/:component', jsonParser, async (req, res) => {
 
-const govukComponentNunjucks = (component, params) => `{% from '${getComponentIdentifier(component)}/macro.njk' import ${component} %}{{${component}(${params})}}`
-
-module.exports = async (req, res, org) => {
     const {
-        body = {},
-        params: {
-            version,
-            component
-        }
+      body = {},
+      params: {
+        version,
+        component
+      }
     } = req
 
-    const {label, minimumSupported, paths} = orgs[org]
+    const org = orgs[orgString];
+    const params = JSON.stringify(body, null, 2)
+    const nunjucksString = `{% from '${getComponentIdentifier(component)}/macro.njk' import ${component} %}{{${component}(${params})}}`
+    await renderNunjucks(version, org, res, nunjucksString);
+  })
 
-    if (parseFloat(version) < minimumSupported) {
-        res.status(500).send(`This version of ${label} is not supported`)
-    } else {
-        await getNpmDependency(label, version)
-
-        const params = JSON.stringify(body, null, 2)
-        try {
-            const nunjucksString = component === 'govukTemplate'
-                ? govukTemplateNunjucks(body)
-                : govukComponentNunjucks(component, params)
-            res.send(nunjucks(paths).renderString(nunjucksString))
-        } catch (err) {
-            res.status(500).send(err)
-        }
-    }
+  return router
 }
+
+module.exports = createRouterForOrg

@@ -67,11 +67,26 @@ const getLatestSha = async (repo, branch = 'master') => {
   return sha
 }
 
+async function renderNunjucks(version, org, res, nunjucksString) {
+  if (parseFloat(version) < org.minimumSupported) {
+    res.status(500).send(`This version of ${(org.label)} is not supported`)
+  } else {
+    await getNpmDependency(org.label, version)
+
+    try {
+      res.send(nunjucks(org.paths).renderString(nunjucksString))
+    } catch (err) {
+      res.status(500).send(err)
+    }
+  }
+}
+
 module.exports = {
   getComponentIdentifier,
   getDataFromFile,
   getDependency,
   getDirectories,
   getNpmDependency,
-  getLatestSha
+  getLatestSha,
+  renderNunjucks
 }
