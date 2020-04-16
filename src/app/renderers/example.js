@@ -8,13 +8,13 @@ const {
   getDirectories,
   getNpmDependency,
   getLatestSha
-} = require('../../util')
+} = require('../util')
 
 const {
   govukDesignSystemRoot,
   hmrcDesignSystemRoot,
   substitutionMap
-} = require('../../constants')
+} = require('../constants')
 
 const orgs = {
   'govuk': {

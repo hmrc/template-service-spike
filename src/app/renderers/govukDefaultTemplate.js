@@ -4,12 +4,12 @@ const bodyParser = require('body-parser')
 
 const jsonParser = bodyParser.json()
 
-const orgs = require('../../constants').orgs
+const orgs = require('../constants').orgs
 
 const {
   getNpmDependency,
   renderNunjucks
-} = require('../../util')
+} = require('../util')
 
 const govukTemplateNunjucks = ({
                                  htmlClasses,

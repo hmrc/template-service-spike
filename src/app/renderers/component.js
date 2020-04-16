@@ -3,12 +3,12 @@ const bodyParser = require('body-parser')
 
 const jsonParser = bodyParser.json()
 
-const orgs = require('../../constants').orgs
+const orgs = require('../constants').orgs
 
 const {
   getComponentIdentifier,
   renderNunjucks
-} = require('../../util')
+} = require('../util')
 
 const createRouterForOrg = (orgString) => {
   const router = express.Router()

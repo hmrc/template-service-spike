@@ -6,7 +6,7 @@ const axios = require('axios')
 const md5 = require('../lib/md5')
 const nunjucks = require('../lib/nunjucks')
 
-const { pathFromRoot } = require('../constants')
+const { pathFromRoot } = require('./constants')
 
 const spawnPromise = (script, args) => new Promise((resolve, reject) => {
   const process = spawn(script, args)
