@@ -48,6 +48,37 @@ Posting to `/hmrc/1.4.0/components/hmrcPageHeading` with a body of `{"text": "Pa
 
 ### 3.
 
+`POST` to `/govuk/$$VERSION$$/templates/default` where `$$VERSION$$` is the NPM package version (e.g. `1.0.0`, `1.4.0`), this must be 3.0.0 or greater.
+
+The request body should contain JSON (therefore a `content-type: application/json` on the request) containing the parameters for the component.  For example:
+
+Posting to `/govuk/3.6.0/templates/default` with a body of `{"htmlLang": "abc", "htmlClasses": "def", "beforeContent": "abcdefghijklmnop"}` would return the HTML:
+
+```
+<!DOCTYPE html>
+<html lang="abc" class="govuk-template def">
+
+<head>
+	<meta charset="utf-8">
+	<title>GOV.UK - The best place to find government services and information</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+	<meta name="theme-color" content="#0b0c0c">
+
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+	<link rel="shortcut icon" sizes="16x16 32x32 48x48" href="/ghi/jkl/mno/images/favicon.ico" type="image/x-icon">
+	<link rel="mask-icon" href="/ghi/jkl/mno/images/govuk-mask-icon.svg" color="#0b0c0c">
+	<link rel="apple-touch-icon" sizes="180x180" href="/ghi/jkl/mno/images/govuk-apple-touch-icon-180x180.png">
+	<link rel="apple-touch-icon" sizes="167x167" href="/ghi/jkl/mno/images/govuk-apple-touch-icon-167x167.png">
+	<link rel="apple-touch-icon" sizes="152x152" href="/ghi/jkl/mno/images/govuk-apple-touch-icon-152x152.png">
+	<link rel="apple-touch-icon" href="/ghi/jkl/mno/images/govuk-apple-touch-icon.png">
+
+
+[...]
+```
+
+### 4.
+
 `GET` from `/examples-output/$$ORG$$/$$COMPONENT_NAME$$` where `$$ORG$$` is the owner of the design system (one of `hmrc` or `govuk`) and `$$COMPONENT_NAME$$` is the name of the component required e.g. `govukSelect`, `govukButton`, `hmrcAccountHeader`
 
 The response will contain the HTML output of each available example for that component along with an MD5 hash of the HTML.

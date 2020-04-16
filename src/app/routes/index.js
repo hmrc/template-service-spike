@@ -1,9 +1,9 @@
 const express = require('express')
 
-const rootController = require('../controllers/rootController')
-const examplesController = require('../controllers/examplesController')
-const govukDefaultTemplateController = require('../controllers/govukDefaultTemplateController')
-const componentController = require('../controllers/componentController')
+const rootController = require('../renderers/root')
+const examplesController = require('../renderers/example')
+const govukDefaultTemplateController = require('../renderers/govukDefaultTemplate')
+const componentController = require('../renderers/component')
 
 const router = express.Router()
 
