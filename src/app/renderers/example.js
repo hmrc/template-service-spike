@@ -32,21 +32,19 @@ const orgs = {
 }
 
 router.get('/:org/:component', async (req, res) => {
-  const {params: {component, org}} = req
-  const {componentRootPath, dependencies, name, rootPath} = orgs[org]
+  const componentIdentifier = getComponentIdentifier(req.params.component)
+  const componentPath = `${(orgs[req.params.org].componentRootPath)}/${substitutionMap[componentIdentifier] || componentIdentifier}`
 
-  const componentIdentifier = getComponentIdentifier(component)
-  const componentPath = `${componentRootPath}/${substitutionMap[componentIdentifier] || componentIdentifier}`
-
-  const sha = await getLatestSha(name)
+  const repoName = orgs[req.params.org].name
+  const sha = await getLatestSha(repoName)
   await getDependency(
-    name,
-    `https://github.com/${name}/tarball/${sha}`,
+    repoName,
+    `https://github.com/${repoName}/tarball/${sha}`,
     sha
   )
 
-  for (const dependency of dependencies) {
-    const version = require(`${rootPath}/package.json`).dependencies[dependency]
+  for (const dependency of orgs[req.params.org].dependencies) {
+    const version = require(`${(orgs[req.params.org].rootPath)}/package.json`).dependencies[dependency]
     const trimmedVersion = version
       .replace('v', '')
       .replace('^', '')

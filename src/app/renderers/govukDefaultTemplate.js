@@ -46,17 +46,9 @@ ${addBlocks(params)}`
 
 
 router.post('/:version/templates/default', jsonParser, async (req, res) => {
-  const {
-    body = {},
-    params: {
-      version
-    }
-  } = req
+  const nunjucksString = govukTemplateNunjucks(req.body)
 
-
-  const nunjucksString = govukTemplateNunjucks(body)
-
-  await renderNunjucks(version, orgs.govuk, res, nunjucksString)
+  await renderNunjucks(req.params.version, orgs.govuk, res, nunjucksString)
 })
 
 module.exports = router
