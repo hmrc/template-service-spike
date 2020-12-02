@@ -15,7 +15,7 @@ if (!parseInt(port, 10)) {
   throw new Error('You must provide a valid port')
 }
 
-// eslint-disable-next-line no-console
 app.listen(port, () =>
+  // eslint-disable-next-line no-console
   console.log(`Running version ${pkg.version} on port ${port}`)
 )
