@@ -11,9 +11,7 @@ const {
   joinWithCurrentUrl,
 } = require('../../util');
 
-const {
-  substitutionMap,
-} = require('../constants');
+const { substitutionMap } = require('../constants');
 
 const router = express.Router();
 
@@ -32,12 +30,7 @@ const orgs = {
   },
 };
 
-const getLatestExamples = (name) => getLatestSha(name)
-  .then((sha) => getDependency(
-    name,
-    `https://github.com/${name}/tarball/${sha}`,
-    sha,
-  ));
+const getLatestExamples = (name) => getLatestSha(name).then((sha) => getDependency(name, `https://github.com/${name}/tarball/${sha}`, sha));
 
 router.get('/', (req, res) => {
   res.send(Object.keys(orgs).map((orgName) => joinWithCurrentUrl(req, orgName)));
@@ -54,7 +47,9 @@ router.get('/:org', (req, res) => {
 });
 
 router.get('/:org/:component', (req, res) => {
-  const { params: { component, org } } = req;
+  const {
+    params: { component, org },
+  } = req;
   const {
     componentRootPath, dependencies, name, nunjucksPaths,
   } = orgs[org];
@@ -62,25 +57,30 @@ router.get('/:org/:component', (req, res) => {
   const componentIdentifier = getComponentIdentifier(undefined, component);
 
   getLatestExamples(name)
-    .then((dependencyPath) => getSubDependencies(dependencyPath, dependencies)
-      .then((subdependecyPaths) => ({
-        dependencyPath,
-        subdependecyPaths: [
-          ...subdependecyPaths,
-          ...nunjucksPaths.map((x) => path.join(dependencyPath, x))],
-      })))
+    .then((dependencyPath) => getSubDependencies(dependencyPath, dependencies).then((subdependecyPaths) => ({
+      dependencyPath,
+      subdependecyPaths: [
+        ...subdependecyPaths,
+        ...nunjucksPaths.map((x) => path.join(dependencyPath, x)),
+      ],
+    })))
     .then((paths) => {
-      const componentPath = `${paths.dependencyPath}/${componentRootPath}/${substitutionMap[componentIdentifier] || componentIdentifier}`;
+      const componentPath = `${paths.dependencyPath}/${componentRootPath}/${
+        substitutionMap[componentIdentifier] || componentIdentifier
+      }`;
 
-      return getDirectories(componentPath)
-        .map((example) => getDataFromFile(`${componentPath}/${example}/index.njk`, paths.subdependecyPaths).catch((err) => {
+      return getDirectories(componentPath).map((example) => getDataFromFile(`${componentPath}/${example}/index.njk`, paths.subdependecyPaths)
+        .catch((err) => {
           const preparedMessage = `This example couldn't be prepared - ${err.message}`;
           return {
             html: preparedMessage,
             nunjucks: preparedMessage,
           };
         })
-          .then((htmlAndNunjucks) => ({ name: `${componentIdentifier}/${example}`, ...htmlAndNunjucks })));
+        .then((htmlAndNunjucks) => ({
+          name: `${componentIdentifier}/${example}`,
+          ...htmlAndNunjucks,
+        })));
     })
     .then((result) => {
       res.send(result);

@@ -11,7 +11,8 @@ const { pathFromRoot } = require('./app/constants');
 
 const mkdir = (path) => fs.mkdirAsync(path, { recursive: true });
 
-const dirExistsAndNotEmpty = (path) => fs.readdirAsync(path)
+const dirExistsAndNotEmpty = (path) => fs
+  .readdirAsync(path)
   .then((contents) => contents.length > 0)
   .catch((err) => {
     if (err.code === 'ENOENT') {
@@ -22,48 +23,54 @@ const dirExistsAndNotEmpty = (path) => fs.readdirAsync(path)
 
 const getDependency = (name, remote, version) => {
   const path = pathFromRoot('dependencies', name, version, name);
-  return dirExistsAndNotEmpty(path)
-    .then((exists) => {
-      if (exists) {
-        return path;
-      }
-      return mkdir(path)
-        .then(() => new Promise((resolve, reject) => {
-          http.get(remote, (response) => {
-            const { statusCode } = response;
-            if (statusCode === 200) {
-              return response
-                .on('error', (err) => reject(err))
-                .pipe(tar.x(
-                  {
-                    strip: 1,
-                    C: path,
-                  },
-                ))
-                .on('error', (err) => reject(err))
-                .on('end', () => resolve(path));
-            } if (statusCode === 302) {
-              // TODO: avoid infinite loops
-              return getDependency(name, response.headers.location, version)
-                .then((dependencyPath) => resolve(dependencyPath))
-                .catch((err) => reject(err));
-            }
-            const message = `Failed to load ${remote} status code was ${statusCode}`;
-            // eslint-disable-next-line no-console
-            console.error(message);
-            return reject(new Error(message));
-          });
-        }));
-    });
+  return dirExistsAndNotEmpty(path).then((exists) => {
+    if (exists) {
+      return path;
+    }
+    return mkdir(path).then(
+      () => new Promise((resolve, reject) => {
+        http.get(remote, (response) => {
+          const { statusCode } = response;
+          if (statusCode === 200) {
+            return response
+              .on('error', (err) => reject(err))
+              .pipe(
+                tar.x({
+                  strip: 1,
+                  C: path,
+                }),
+              )
+              .on('error', (err) => reject(err))
+              .on('end', () => resolve(path));
+          }
+          if (statusCode === 302) {
+            // TODO: avoid infinite loops
+            return getDependency(name, response.headers.location, version)
+              .then((dependencyPath) => resolve(dependencyPath))
+              .catch((err) => reject(err));
+          }
+          const message = `Failed to load ${remote} status code was ${statusCode}`;
+          // eslint-disable-next-line no-console
+          console.error(message);
+          return reject(new Error(message));
+        });
+      }),
+    );
+  });
 };
 
-const getComponentIdentifier = (org, component) => component.replace(/([A-Z])/g, (g) => `-${g[0].toLowerCase()}`).replace('govuk-', '').replace('hmrc-', '');
-const getComponentSignature = (org, component) => org + component.replace(/^[a-z]/, (g) => `${g[0].toUpperCase()}`).replace(/(-[a-z])/g, (g) => `${g[1].toUpperCase()}`);
+const getComponentIdentifier = (org, component) => component
+  .replace(/([A-Z])/g, (g) => `-${g[0].toLowerCase()}`)
+  .replace('govuk-', '')
+  .replace('hmrc-', '');
+const getComponentSignature = (org, component) => org
+  + component
+    .replace(/^[a-z]/, (g) => `${g[0].toUpperCase()}`)
+    .replace(/(-[a-z])/g, (g) => `${g[1].toUpperCase()}`);
 
-const getDirectories = (source) => fs.readdirAsync(source, { withFileTypes: true })
-  .then((files) => files
-    .filter((dirent) => dirent.isDirectory())
-    .map((dirent) => dirent.name));
+const getDirectories = (source) => fs
+  .readdirAsync(source, { withFileTypes: true })
+  .then((files) => files.filter((dirent) => dirent.isDirectory()).map((dirent) => dirent.name));
 
 const getDataFromFile = (file, paths) => fs.readFileAsync(file, 'utf8').then((contents) => {
   const nj = matter(contents).content;
@@ -97,7 +104,9 @@ const getLatestSha = (() => {
     }
     const token = process.env.TOKEN;
     const headers = token ? { headers: { Authorization: `token ${token}` } } : undefined;
-    const { data: { sha } } = await axios.get(`https://api.github.com/repos/${repo}/commits/${branch}`, headers);
+    const {
+      data: { sha },
+    } = await axios.get(`https://api.github.com/repos/${repo}/commits/${branch}`, headers);
     addToCache(cacheKey, sha);
     return sha;
   };
@@ -119,17 +128,14 @@ const getOrgDetails = (org, version) => ({
     dependencies: ['govuk-frontend'],
     minimumSupported: 1,
   },
-})[org];
+}[org]);
 
 const loadJsonFile = (filePath) => fs.readFileAsync(filePath).then(JSON.parse);
 
 const getSubDependencies = (dependencyPath, dependencies) => Promise.all(
   dependencies.map((dependency) => loadJsonFile(`${dependencyPath}/package.json`).then((packageContents) => {
     const version = packageContents.dependencies[dependency];
-    const trimmedVersion = version
-      .replace('v', '')
-      .replace('^', '')
-      .replace('~', '');
+    const trimmedVersion = version.replace('v', '').replace('^', '').replace('~', '');
     return getNpmDependency(dependency, trimmedVersion);
   })),
 );
@@ -153,12 +159,19 @@ const joinWithCurrentUrl = (req, path) => `${req.originalUrl.replace(/\/+$/, '')
 const versionIsCompatible = (version, org) => parseFloat(version) >= org.minimumSupported;
 
 const getConfiguredNunjucksForOrganisation = (org, version) => getNpmDependency(org.label, version)
-  .then((path) => getSubDependencies(path, org.dependencies || []).then((dependencyPaths) => [path, `${path}/views/layouts`, ...dependencyPaths]))
+  .then((path) => getSubDependencies(path, org.dependencies || []).then((dependencyPaths) => [
+    path,
+    `${path}/views/layouts`,
+    ...dependencyPaths,
+  ]))
   .then((nunjucksPaths) => nunjucks(nunjucksPaths));
 
 const renderComponent = (org, component, params, nunjucksRenderer) => {
   const preparedParams = JSON.stringify(params || {}, null, 2);
-  const nunjucksString = `{% from '${org}/components/${getComponentIdentifier(org, component)}/macro.njk' import ${component} %}{{${component}(${preparedParams})}}`;
+  const nunjucksString = `{% from '${org}/components/${getComponentIdentifier(
+    org,
+    component,
+  )}/macro.njk' import ${component} %}{{${component}(${preparedParams})}}`;
 
   return nunjucksRenderer.renderString(nunjucksString);
 };

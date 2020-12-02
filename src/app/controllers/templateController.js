@@ -4,21 +4,14 @@ const nunjucks = require('../../lib/nunjucks');
 
 const jsonParser = bodyParser.json();
 
-const {
-  getNpmDependency,
-  getOrgDetails,
-} = require('../../util');
+const { getNpmDependency, getOrgDetails } = require('../../util');
 
 const router = express.Router();
 
 router.post('/:org/:version/:template', jsonParser, async (req, res) => {
   const {
     body = {},
-    params: {
-      version,
-      template,
-      org,
-    },
+    params: { version, template, org },
   } = req;
   const { label, minimumSupported } = getOrgDetails(org);
 
@@ -33,8 +26,12 @@ router.post('/:org/:version/:template', jsonParser, async (req, res) => {
   }
   getNpmDependency(label, version).then((path) => {
     const nunjucksPaths = [`${path}/govuk`];
-    const variables = Object.keys(body.variables || {}).map((key) => `{% set ${key}=${JSON.stringify(body.variables[key])} %}`);
-    const blocks = Object.keys(body.blocks || {}).map((key) => `{% block ${key} %}${body.blocks[key]}{% endblock %}`);
+    const variables = Object.keys(body.variables || {}).map(
+      (key) => `{% set ${key}=${JSON.stringify(body.variables[key])} %}`,
+    );
+    const blocks = Object.keys(body.blocks || {}).map(
+      (key) => `{% block ${key} %}${body.blocks[key]}{% endblock %}`,
+    );
     const nunjucksString = `${[...variables, ...blocks].join('\n')} {% extends "template.njk" %}`;
 
     try {

@@ -19,7 +19,7 @@ router.post('/:org/:version/:component', jsonParser, (req, res) => {
   const orgDetails = getOrgDetails(org);
 
   if (!versionIsCompatible(version, orgDetails)) {
-    res.status(500).send(`This version of ${(orgDetails.label)} is not supported`);
+    res.status(500).send(`This version of ${orgDetails.label} is not supported`);
   } else {
     getConfiguredNunjucksForOrganisation(getOrgDetails(orgDetails.code), version)
       .then((nunjucks) => renderComponent(orgDetails.code, component, req.body, nunjucks))

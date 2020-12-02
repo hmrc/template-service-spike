@@ -1,8 +1,6 @@
 const nunjucks = require('nunjucks');
 
-const configured = (paths = []) => nunjucks.configure([
-  ...paths,
-], {
+const configured = (paths = []) => nunjucks.configure([...paths], {
   autoescape: true, // output with dangerous characters are escaped automatically
   noCache: true, // never use a cache and recompile templates each time
   trimBlocks: true, // automatically remove trailing newlines from a block/tag
