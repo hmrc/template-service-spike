@@ -1,6 +1,6 @@
-const path = require('path');
+const path = require('path')
 
-const pathFromRoot = (...parts) => path.join(__dirname, '..', ...parts);
+const pathFromRoot = (...parts) => path.join(__dirname, '..', ...parts)
 
 module.exports = {
   pathFromRoot,
@@ -8,4 +8,4 @@ module.exports = {
   substitutionMap: {
     input: 'text-input',
   },
-};
+}

@@ -1,32 +1,35 @@
-const request = require('supertest');
-const fs = require('fs');
-const marked = require('marked');
+const request = require('supertest')
+const fs = require('fs')
+const marked = require('marked')
 
-const { readMe } = require('../../src/app/constants');
+const { readMe } = require('../../src/app/constants')
 
-const app = require('../../src/app');
+const app = require('../../src/app')
 
 const expectHtmlToMatch = (expected, actual) => {
-  const normalise = (str) => str.replace(/\s+/g, '\n').trim();
-  expect(normalise(expected)).toBe(normalise(actual));
-};
+  const normalise = (str) => str.replace(/\s+/g, '\n').trim()
+  expect(normalise(expected)).toBe(normalise(actual))
+}
 
-jest.setTimeout(10000);
+jest.setTimeout(10000)
 
 describe('X-GOVUK Component Renderer', () => {
   describe('HMRC component endpoint', () => {
-    it('should return 500 and an error if the version requested is older than 1.0.0', () => request(app)
-      .post('/component/hmrc/0.1.2/hmrcPageHeading')
-      .send({ text: 'Page heading from an unsupported version' })
-      .expect(500)
-      .then((response) => {
-        expect(response.text).toBe('This version of hmrc-frontend is not supported');
-      }));
+    it('should return 500 and an error if the version requested is older than 1.0.0', () =>
+      request(app)
+        .post('/component/hmrc/0.1.2/hmrcPageHeading')
+        .send({ text: 'Page heading from an unsupported version' })
+        .expect(500)
+        .then((response) => {
+          expect(response.text).toBe(
+            'This version of hmrc-frontend is not supported'
+          )
+        }))
 
     it('should return a hmrc page heading', () => {
       const expected = `<header class="hmrc-page-heading">
   <h1 class="govuk-heading-xl">This heading</h1><p class="govuk-caption-xl hmrc-caption-xl"><span class="govuk-visually-hidden">This section is </span>That section</p></header>
-`;
+`
       return request(app)
         .post('/component/hmrc/1.4.0/hmrcPageHeading')
         .send({
@@ -35,9 +38,9 @@ describe('X-GOVUK Component Renderer', () => {
         })
         .expect(200)
         .then((response) => {
-          expect(response.text).toBe(expected);
-        });
-    });
+          expect(response.text).toBe(expected)
+        })
+    })
 
     it('should return a currencyInput (which requires govuk-frontend)', () => {
       const expected = `<div class="govuk-form-group">
@@ -50,7 +53,7 @@ describe('X-GOVUK Component Renderer', () => {
             type="text"            inputmode="decimal"/>
 
     </div>
-\t</div>`;
+\t</div>`
       return request(app)
         .post('/component/hmrc/1.12.0/hmrcCurrencyInput')
         .send({
@@ -58,96 +61,107 @@ describe('X-GOVUK Component Renderer', () => {
         })
         .expect(200)
         .then((response) => {
-          expectHtmlToMatch(response.text, expected);
-        });
-    });
-  });
+          expectHtmlToMatch(response.text, expected)
+        })
+    })
+  })
 
   describe('GOVUK component', () => {
-    it('should return 500 and an error if the version requested is older than 3.0.0', () => request(app)
-      .post('/component/govuk/2.3.4/govukButton')
-      .send({ text: 'Button from an unsupported version' })
-      .expect(500)
-      .then((response) => {
-        expect(response.text).toBe('This version of govuk-frontend is not supported');
-      }));
+    it('should return 500 and an error if the version requested is older than 3.0.0', () =>
+      request(app)
+        .post('/component/govuk/2.3.4/govukButton')
+        .send({ text: 'Button from an unsupported version' })
+        .expect(500)
+        .then((response) => {
+          expect(response.text).toBe(
+            'This version of govuk-frontend is not supported'
+          )
+        }))
 
     it('should return an older version of govukbutton', () => {
       const expected = `<button type="submit" class="govuk-button" data-module="govuk-button">
   Button from an older version
-</button>`;
+</button>`
 
       return request(app)
         .post('/component/govuk/3.0.0/govukButton')
         .send({ text: 'Button from an older version' })
         .expect(200)
         .then((response) => {
-          expect(response.text).toBe(expected);
-        });
-    });
+          expect(response.text).toBe(expected)
+        })
+    })
 
     it('should return a govukbutton', () => {
       const expected = `<button class="govuk-button" data-module="govuk-button">
   Save and continue
-</button>`;
+</button>`
 
       return request(app)
         .post('/component/govuk/3.3.0/govukButton')
         .send({ text: 'Save and continue' })
         .expect(200)
         .then((response) => {
-          expect(response.text).toBe(expected);
-        });
-    });
+          expect(response.text).toBe(expected)
+        })
+    })
 
     it('should be able to respond to old an new versions simultaneously', () => {
-      const input = { text: 'Button Example', isStartButton: true };
+      const input = { text: 'Button Example', isStartButton: true }
       const older = request(app)
         .post('/component/govuk/3.0.0/govukButton')
         .send(input)
         .expect(200)
         .then((response) => {
-          expect(response.text.startsWith('<button type="submit" class="govuk-button')).toBe(true);
-          expect(response.text.includes('role="presentation"')).toBe(true);
-          expect(response.text.includes('aria-hidden="true"')).toBe(false);
-        });
+          expect(
+            response.text.startsWith(
+              '<button type="submit" class="govuk-button'
+            )
+          ).toBe(true)
+          expect(response.text.includes('role="presentation"')).toBe(true)
+          expect(response.text.includes('aria-hidden="true"')).toBe(false)
+        })
 
       const medium = request(app)
         .post('/component/govuk/3.3.0/govukButton')
         .send(input)
         .expect(200)
         .then((response) => {
-          expect(response.text.startsWith('<button class="govuk-button')).toBe(true);
-          expect(response.text.includes('role="presentation"')).toBe(true);
-          expect(response.text.includes('aria-hidden="true"')).toBe(false);
-        });
+          expect(response.text.startsWith('<button class="govuk-button')).toBe(
+            true
+          )
+          expect(response.text.includes('role="presentation"')).toBe(true)
+          expect(response.text.includes('aria-hidden="true"')).toBe(false)
+        })
 
       const newer = request(app)
         .post('/component/govuk/3.6.0/govukButton')
         .send(input)
         .expect(200)
         .then((response) => {
-          expect(response.text.startsWith('<button class="govuk-button')).toBe(true);
-          expect(response.text.includes('role="presentation"')).toBe(false);
-          expect(response.text.includes('aria-hidden="true"')).toBe(true);
-        });
+          expect(response.text.startsWith('<button class="govuk-button')).toBe(
+            true
+          )
+          expect(response.text.includes('role="presentation"')).toBe(false)
+          expect(response.text.includes('aria-hidden="true"')).toBe(true)
+        })
 
-      return Promise.all([older, medium, newer]);
-    });
+      return Promise.all([older, medium, newer])
+    })
 
     it('should return the text I provided', () => {
       const expected = `<button class="govuk-button" data-module="govuk-button">
   I Waz &#39;ere
-</button>`;
+</button>`
 
       return request(app)
         .post('/component/govuk/3.3.0/govukButton')
         .send({ text: "I Waz 'ere" })
         .expect(200)
         .then((response) => {
-          expect(response.text).toBe(expected);
-        });
-    });
+          expect(response.text).toBe(expected)
+        })
+    })
 
     it('should support a complex component', () => {
       const expected = `<div class="govuk-form-group govuk-form-group--error">
@@ -190,7 +204,7 @@ describe('X-GOVUK Component Renderer', () => {
     </div>
   </div>
 </fieldset>
-</div>`;
+</div>`
 
       return request(app)
         .post('/component/govuk/3.3.0/govukDateInput')
@@ -230,9 +244,9 @@ describe('X-GOVUK Component Renderer', () => {
         })
         .expect(200)
         .then((response) => {
-          expectHtmlToMatch(response.text, expected);
-        });
-    });
+          expectHtmlToMatch(response.text, expected)
+        })
+    })
 
     it('should render without parameters when none are provided', () => {
       const expected = `<footer class="govuk-footer " role="contentinfo">
@@ -273,17 +287,17 @@ describe('X-GOVUK Component Renderer', () => {
     </div>
   </div>
 </footer>
-`;
+`
 
       return request(app)
         .post('/component/govuk/3.3.0/govukFooter')
         .send()
         .expect(200)
         .then((response) => {
-          expectHtmlToMatch(response.text, expected);
-        });
-    });
-  });
+          expectHtmlToMatch(response.text, expected)
+        })
+    })
+  })
 
   describe('Examples output', () => {
     const expected = [
@@ -329,136 +343,153 @@ describe('X-GOVUK Component Renderer', () => {
   }
 }) }}`,
       },
-    ];
+    ]
 
-    it('should return an array of examples with markup and Nunjucks', (done) => request(app)
-      .get('/example-usage/govuk/file-upload')
-      .expect(200)
-      .then((response) => {
-        expect(response.body).toEqual(expected);
-        done();
-      }));
+    it('should return an array of examples with markup and Nunjucks', (done) =>
+      request(app)
+        .get('/example-usage/govuk/file-upload')
+        .expect(200)
+        .then((response) => {
+          expect(response.body).toEqual(expected)
+          done()
+        }))
 
-    it('should work if the request uses the macro name', (done) => request(app)
-      .get('/example-usage/govuk/govukFileUpload')
-      .expect(200)
-      .then((response) => {
-        expect(response.body).toEqual(expected);
-        done();
-      }));
+    it('should work if the request uses the macro name', (done) =>
+      request(app)
+        .get('/example-usage/govuk/govukFileUpload')
+        .expect(200)
+        .then((response) => {
+          expect(response.body).toEqual(expected)
+          done()
+        }))
 
-    it('should return a 500 if requested component does not exist', () => request(app).get('/example-usage/govuk/foo').expect(500));
+    it('should return a 500 if requested component does not exist', () =>
+      request(app).get('/example-usage/govuk/foo').expect(500))
 
-    it('should work with HMRC components', (done) => request(app)
-      .get('/example-usage/hmrc/green-button')
-      .expect(200)
-      .then((response) => {
-        expect(response.body).toEqual([
-          {
-            name: 'green-button/example',
-            html:
+    it('should work with HMRC components', (done) =>
+      request(app)
+        .get('/example-usage/hmrc/green-button')
+        .expect(200)
+        .then((response) => {
+          expect(response.body).toEqual([
+            {
+              name: 'green-button/example',
+              html:
                 '<h1 class="govuk-heading-xl">Check your National Insurance record</h1>\n\n<p class="govuk-body">You can check your National Insurance record online to see:</p>\n\n<ul class="govuk-list govuk-list--bullet">\n  <li>what you’ve paid, up to the start of the current tax year (6 April 2019)</li>\n  <li>any <a href="#" class="govuk-link">National Insurance credits</a> you’ve received</li>\n  <li>if gaps in contributions or credits mean some years do not count towards your State Pension (they are not ‘qualifying years’)</li>\n  <li>if you can pay <a href="#" class="govuk-link">voluntary contributions</a> to fill any gaps and how much this will cost</li>\n</ul>\n\n<p class="govuk-body">\n  Your online record does not cover how much <a href="#" class="govuk-link">State Pension you’re likely to get</a>.\n</p>\n\n<button class="govuk-button govuk-button--start" data-module="govuk-button">\n  Start now\n  <svg class="govuk-button__start-icon" xmlns="http://www.w3.org/2000/svg" width="17.5" height="19" viewBox="0 0 33 40" aria-hidden="true" focusable="false">\n    <path fill="currentColor" d="M0 0h13l20 20-20 20H0l20-20z"/>\n  </svg>\n</button>',
-            nunjucks:
+              nunjucks:
                 '{% from "govuk/components/button/macro.njk" import govukButton %}\n\n<h1 class="govuk-heading-xl">Check your National Insurance record</h1>\n\n<p class="govuk-body">You can check your National Insurance record online to see:</p>\n\n<ul class="govuk-list govuk-list--bullet">\n  <li>what you’ve paid, up to the start of the current tax year (6 April 2019)</li>\n  <li>any <a href="#" class="govuk-link">National Insurance credits</a> you’ve received</li>\n  <li>if gaps in contributions or credits mean some years do not count towards your State Pension (they are not ‘qualifying years’)</li>\n  <li>if you can pay <a href="#" class="govuk-link">voluntary contributions</a> to fill any gaps and how much this will cost</li>\n</ul>\n\n<p class="govuk-body">\n  Your online record does not cover how much <a href="#" class="govuk-link">State Pension you’re likely to get</a>.\n</p>\n\n{{ govukButton({\n  text: "Start now",\n  isStartButton: true\n}) }}',
-          },
-        ]);
-        done();
-      }));
+            },
+          ])
+          done()
+        }))
 
-    it('should list GOVUK components which have examples', () => request(app)
-      .get('/example-usage/govuk')
-      .expect(200)
-      .then((response) => {
-        expect(response.body.length > 0).toBe(true);
-        response.body.forEach((item) => {
-          expect(item.startsWith('/example-usage/govuk/')).toBe(true);
-        });
-      }));
+    it('should list GOVUK components which have examples', () =>
+      request(app)
+        .get('/example-usage/govuk')
+        .expect(200)
+        .then((response) => {
+          expect(response.body.length > 0).toBe(true)
+          response.body.forEach((item) => {
+            expect(item.startsWith('/example-usage/govuk/')).toBe(true)
+          })
+        }))
 
-    it('should list HMRC components which have examples', () => request(app)
-      .get('/example-usage/hmrc')
-      .expect(200)
-      .then((response) => {
-        expect(response.body.length > 0).toBe(true);
-        response.body.forEach((item) => {
-          expect(item.startsWith('/example-usage/hmrc/')).toBe(true);
-        });
-      }));
+    it('should list HMRC components which have examples', () =>
+      request(app)
+        .get('/example-usage/hmrc')
+        .expect(200)
+        .then((response) => {
+          expect(response.body.length > 0).toBe(true)
+          response.body.forEach((item) => {
+            expect(item.startsWith('/example-usage/hmrc/')).toBe(true)
+          })
+        }))
 
-    it('should not add double forward slashes', () => request(app)
-      .get('/example-usage/hmrc/')
-      .expect(200)
-      .then((response) => {
-        expect(response.body.length > 0).toBe(true);
-        response.body.forEach((item) => {
-          expect(item.startsWith('/example-usage/hmrc//')).toBe(false);
-        });
-      }));
+    it('should not add double forward slashes', () =>
+      request(app)
+        .get('/example-usage/hmrc/')
+        .expect(200)
+        .then((response) => {
+          expect(response.body.length > 0).toBe(true)
+          response.body.forEach((item) => {
+            expect(item.startsWith('/example-usage/hmrc//')).toBe(false)
+          })
+        }))
 
-    it('should list the available organisations', () => request(app)
-      .get('/example-usage/')
-      .expect(200)
-      .then((response) => {
-        expect(response.body).toEqual(['/example-usage/govuk', '/example-usage/hmrc']);
-      }));
+    it('should list the available organisations', () =>
+      request(app)
+        .get('/example-usage/')
+        .expect(200)
+        .then((response) => {
+          expect(response.body).toEqual([
+            '/example-usage/govuk',
+            '/example-usage/hmrc',
+          ])
+        }))
 
-    it('should list HMRC components which have examples', () => request(app)
-      .get('/example-usage/hmrc')
-      .expect(200)
-      .then((response) => {
-        expect(response.body.length > 0).toBe(true);
-        response.body.forEach((item) => {
-          expect(item.startsWith('/example-usage/hmrc/')).toBe(true);
-        });
-      }));
-  });
+    it('should list HMRC components which have examples', () =>
+      request(app)
+        .get('/example-usage/hmrc')
+        .expect(200)
+        .then((response) => {
+          expect(response.body.length > 0).toBe(true)
+          response.body.forEach((item) => {
+            expect(item.startsWith('/example-usage/hmrc/')).toBe(true)
+          })
+        }))
+  })
 
   describe('GOVUK template', () => {
-    it('should return 500 and an error if the version requested is older than 3.0.0', () => request(app)
-      .post('/template/govuk/2.3.4/default')
-      .send({})
-      .expect(500)
-      .then((response) => {
-        expect(response.text).toBe('This version of govuk-frontend is not supported');
-      }));
+    it('should return 500 and an error if the version requested is older than 3.0.0', () =>
+      request(app)
+        .post('/template/govuk/2.3.4/default')
+        .send({})
+        .expect(500)
+        .then((response) => {
+          expect(response.text).toBe(
+            'This version of govuk-frontend is not supported'
+          )
+        }))
 
-    it('should reject unknown templates', () => request(app)
-      .post('/template/govuk/3.6.0/some-template')
-      .send({})
-      .expect(400)
-      .then((response) => {
-        expect(response.text).toBe(
-          'Currently only "govuk" and the "default" template is supported',
-        );
-      }));
+    it('should reject unknown templates', () =>
+      request(app)
+        .post('/template/govuk/3.6.0/some-template')
+        .send({})
+        .expect(400)
+        .then((response) => {
+          expect(response.text).toBe(
+            'Currently only "govuk" and the "default" template is supported'
+          )
+        }))
 
-    it('should render govuk template with blocks and variables', () => request(app)
-      .post('/template/govuk/3.6.0/default')
-      .send({
-        variables: {
-          htmlLang: 'abc',
-          htmlClasses: 'def',
-          assetPath: '/ghi/jkl',
-          bodyAttributes: {
-            one: 1,
-            'data-two': 'this-is two',
+    it('should render govuk template with blocks and variables', () =>
+      request(app)
+        .post('/template/govuk/3.6.0/default')
+        .send({
+          variables: {
+            htmlLang: 'abc',
+            htmlClasses: 'def',
+            assetPath: '/ghi/jkl',
+            bodyAttributes: {
+              one: 1,
+              'data-two': 'this-is two',
+            },
           },
-        },
-        blocks: {
-          beforeContent: 'abcdefghijklmnop',
-          pageTitle: 'This is the title',
-          headIcons: 'headIcons',
-          skipLink: 'skipLink',
-          header: 'the header',
-          main: 'the main',
-          footer: 'The footer',
-        },
-      })
-      .expect(200)
-      .then((response) => {
-        expectHtmlToMatch(
-          response.text,
-          `<!DOCTYPE html>
+          blocks: {
+            beforeContent: 'abcdefghijklmnop',
+            pageTitle: 'This is the title',
+            headIcons: 'headIcons',
+            skipLink: 'skipLink',
+            header: 'the header',
+            main: 'the main',
+            footer: 'The footer',
+          },
+        })
+        .expect(200)
+        .then((response) => {
+          expectHtmlToMatch(
+            response.text,
+            `<!DOCTYPE html>
 <html lang="abc" class="govuk-template def">
 
 <head>
@@ -485,84 +516,101 @@ describe('X-GOVUK Component Renderer', () => {
 </body>
 
 </html>
-`.replace(/\s+/g, '\n'),
-        );
-      }));
-  });
+`.replace(/\s+/g, '\n')
+          )
+        }))
+  })
 
   describe('snapshotter', () => {
-    it('should return a snapshot from a recent GOVUK version', () => request(app)
-      .get('/snapshot/govuk/3.6.0')
-      .expect(200)
-      .then((response) => {
-        expect(response.body.length).toBe(188);
-        expect(response.body.map((x) => x.exampleId).filter((x) => x.startsWith('footer-'))).toEqual([
-          'footer-default',
-          'footer-with-meta',
-          'footer-with-custom-meta',
-          'footer-with-meta-links-and-meta-content',
-          'footer-with-custom-meta2',
-          'footer-with-navigation',
-          'footer-GOV.UK',
-          'footer-Three-equal-columns',
-        ]);
-      }));
-    it('should return a snapshot from a recent HMRC version', () => request(app)
-      .get('/snapshot/hmrc/1.12.0')
-      .expect(200)
-      .then((response) => {
-        expect(response.body.length).toBe(42);
-        expect(
-          response.body.map((x) => x.exampleId).filter((x) => x.startsWith('currency-')),
-        ).toEqual(['currency-input-default']);
-      }));
-    it('should return a snapshot from an older HMRC version', () => request(app)
-      .get('/snapshot/hmrc/1.1.0')
-      .expect(200)
-      .then((response) => {
-        expect(response.body.length).toBe(38);
-        expect(
-          response.body.map((x) => x.exampleId).filter((x) => x.startsWith('currency-')),
-        ).toEqual([]);
-      }));
-    it('should render using the correct govuk-frontend version', () => Promise.all([
+    it('should return a snapshot from a recent GOVUK version', () =>
       request(app)
         .get('/snapshot/govuk/3.6.0')
         .expect(200)
         .then((response) => {
-          const { output } = response.body.filter((x) => x.exampleId === 'button-start-link')[0];
-          expect(output.includes('role="presentation"')).toBe(false);
-          expect(output.includes('aria-hidden="true"')).toBe(true);
-        }),
+          expect(response.body.length).toBe(188)
+          expect(
+            response.body
+              .map((x) => x.exampleId)
+              .filter((x) => x.startsWith('footer-'))
+          ).toEqual([
+            'footer-default',
+            'footer-with-meta',
+            'footer-with-custom-meta',
+            'footer-with-meta-links-and-meta-content',
+            'footer-with-custom-meta2',
+            'footer-with-navigation',
+            'footer-GOV.UK',
+            'footer-Three-equal-columns',
+          ])
+        }))
+    it('should return a snapshot from a recent HMRC version', () =>
       request(app)
-        .get('/snapshot/govuk/3.5.0')
+        .get('/snapshot/hmrc/1.12.0')
         .expect(200)
         .then((response) => {
-          const { output } = response.body.filter((x) => x.exampleId === 'button-start-link')[0];
-          expect(output.includes('role="presentation"')).toBe(true);
-          expect(output.includes('aria-hidden="true"')).toBe(false);
-        }),
-    ]));
-  });
+          expect(response.body.length).toBe(42)
+          expect(
+            response.body
+              .map((x) => x.exampleId)
+              .filter((x) => x.startsWith('currency-'))
+          ).toEqual(['currency-input-default'])
+        }))
+    it('should return a snapshot from an older HMRC version', () =>
+      request(app)
+        .get('/snapshot/hmrc/1.1.0')
+        .expect(200)
+        .then((response) => {
+          expect(response.body.length).toBe(38)
+          expect(
+            response.body
+              .map((x) => x.exampleId)
+              .filter((x) => x.startsWith('currency-'))
+          ).toEqual([])
+        }))
+    it('should render using the correct govuk-frontend version', () =>
+      Promise.all([
+        request(app)
+          .get('/snapshot/govuk/3.6.0')
+          .expect(200)
+          .then((response) => {
+            const { output } = response.body.filter(
+              (x) => x.exampleId === 'button-start-link'
+            )[0]
+            expect(output.includes('role="presentation"')).toBe(false)
+            expect(output.includes('aria-hidden="true"')).toBe(true)
+          }),
+        request(app)
+          .get('/snapshot/govuk/3.5.0')
+          .expect(200)
+          .then((response) => {
+            const { output } = response.body.filter(
+              (x) => x.exampleId === 'button-start-link'
+            )[0]
+            expect(output.includes('role="presentation"')).toBe(true)
+            expect(output.includes('aria-hidden="true"')).toBe(false)
+          }),
+      ]))
+  })
 
   describe('Root page', () => {
     it('should return rendered markdown of README.md', (done) => {
-      let expected;
+      let expected
       fs.readFile(readMe, 'utf8', (err, contents) => {
-        expected = marked(contents);
-      });
+        expected = marked(contents)
+      })
 
       return request(app)
         .get('/')
         .expect(200)
         .then((response) => {
-          expect(response.text).toEqual(expected);
-          done();
-        });
-    });
-  });
+          expect(response.text).toEqual(expected)
+          done()
+        })
+    })
+  })
 
   describe('Unknown paths', () => {
-    it('should return a 404', () => request(app).get('/unknown-path').expect(404));
-  });
-});
+    it('should return a 404', () =>
+      request(app).get('/unknown-path').expect(404))
+  })
+})
