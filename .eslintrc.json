@@ -1,5 +1,5 @@
 {
   "extends": ["airbnb-base", "prettier"],
   "root": true,
-  "ignorePatterns": ["src/dependencies/**/*.js"]
+  "ignorePatterns": ["src/dependencies/**/*.js", "test/backstop/**.*"]
 }
